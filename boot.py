@@ -4,6 +4,7 @@ import image
 import time
 import uos
 import sys
+import random
 
 lcd.init()
 lcd.rotation(2) #Rotate the lcd 180deg
@@ -31,23 +32,34 @@ wav_dev = I2S(I2S.DEVICE_0)
 
 
 def sound(audio_file_path = "/flash/ding.wav"):
-    try:
-        player = audio.Audio(path = audio_file_path)
-        player.volume(100)
-        wav_info = player.play_process(wav_dev)
-        wav_dev.channel_config(wav_dev.CHANNEL_1, I2S.TRANSMITTER,resolution = I2S.RESOLUTION_16_BIT, align_mode = I2S.STANDARD_MODE)
-        wav_dev.set_sample_rate(wav_info[1])
-        while True:
-            ret = player.play()
-            if ret == None:
-                break
-            elif ret==0:
-                break
-        player.finish()
-    except:
-        pass
+    player = audio.Audio(path = audio_file_path)
+    player.volume(100)
+    wav_info = player.play_process(wav_dev)
+    wav_dev.channel_config(wav_dev.CHANNEL_1, I2S.TRANSMITTER,resolution = I2S.RESOLUTION_16_BIT, align_mode = I2S.STANDARD_MODE)
+    wav_dev.set_sample_rate(wav_info[1])
+    while True:
+        ret = player.play()
+        if ret == None:
+            break
+        elif ret==0:
+            break
+    player.finish()
 
 
+def alert():
+    # sound("/sd/alert400.wav")
+    sound("/sd/nyu.wav")
+
+
+def led_on(led):
+    led.value(0)
+
+
+def led_off(led):
+    led.value(1)
+
+
+# 起動音を鳴らす
 sound()
 
 fm.register(board_info.BUTTON_A, fm.fpioa.GPIO1)
@@ -111,8 +123,14 @@ try:
         bbox = kpu.run_yolo2(task, img) # Run the detection routine
         if bbox:
             for i in bbox:
-                print(i)
-                sound("/sd/dog1.wav")
+                # print(i)
+
+                led = random.choice([led_r, led_g, led_b])
+                led_on(led)
+
+                alert()
+
+                led_off(led)
 
                 img.draw_rectangle(i.rect())
         lcd.display(img)
